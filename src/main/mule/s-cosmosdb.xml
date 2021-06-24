@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="cosmosdb-list-collection-document" doc:id="17ea6cc9-ea4b-40dc-ac74-19aaadf844da" >
+		<http:listener doc:name="Listener" doc:id="e14a0dbd-4315-43d8-ab93-3b0ff2aeddf6" config-ref="HTTP_Listener_config" path="/listDocuments" allowedMethods="GET"/>
+		<ee:transform doc:name="Set AuthKey" doc:id="583bdd8b-2a43-4b4e-8bcf-6d2aee78379e" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="cosmosHeader" ><![CDATA[%dw 2.0
+import java!cosmosdb::GenerateCosmosDBAuthToken
+output application/java
+var verb = "GET"
+var resourceType = "docs" 
+var resourceId = "dbs/playground/colls/salesorderdetails"
+var key = "p2o5E88VaVt8QzNy25wW3uWdqNWm77EefV48g0qYwLBevLIN8hfA6U8buUNbZPpRYR5SVeroNCxH1REHQHeOJA=="
+var keyType = "master"
+var tokenVersion = "1.0"		 
+var serverDateTime = GenerateCosmosDBAuthToken::getServerTime() as String
+---
+{
+	serverDateTime: serverDateTime,
+	authKey: GenerateCosmosDBAuthToken::generate(verb, resourceType, resourceId, key, keyType, tokenVersion, serverDateTime)
+}
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<http:request method="GET" doc:name="Cosmos DB API for SQL insert" doc:id="cbf18418-3c80-4ce1-95f6-ca58df297930" config-ref="cosmosdb_config" path="${cosmosdb.path}" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Accept" : "application/json",
+	"x-ms-version" : "2016-07-11",
+	"x-ms-max-item-count": 10,  
+	"x-ms-documentdb-query-enablecrosspartition": "False",  
+	"Authorization" : vars.cosmosHeader.authKey,
+	"x-ms-date" : vars.cosmosHeader.serverDateTime,
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="a4f23bf0-abc2-473e-83a6-bb96a3e8bf8e" message="Success" />
+	</flow>
+</mule>

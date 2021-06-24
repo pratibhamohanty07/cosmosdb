@@ -1,0 +1,11 @@
+cosmosdb:
+ host : "daas-test-cosmos-order2cash.documents.azure.com"
+ port : "443"
+ key: "p2o5E88VaVt8QzNy25wW3uWdqNWm77EefV48g0qYwLBevLIN8hfA6U8buUNbZPpRYR5SVeroNCxH1REHQHeOJA=="
+ path : "dbs/playground/colls/salesorderdetails/docs"
+ resourceId: "dbs/playground/colls/salesorderdetails"
+ 
+ 
+ http:
+  port: "8091"
+ 
